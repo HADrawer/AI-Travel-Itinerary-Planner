@@ -31,7 +31,7 @@ export default function Home() {
         🌍 AI Travel Itinerary Planner
       </h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto text-black">
         {/* Input Panel */}
         <form
           onSubmit={handleSubmit}
