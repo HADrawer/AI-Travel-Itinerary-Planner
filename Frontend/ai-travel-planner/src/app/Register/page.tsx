@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useState , useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useRouter } from 'next/navigation';
+import { Session } from '@supabase/supabase-js';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -9,25 +10,49 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+ const [session, setSession] = useState<Session | null>(null);
+  const [checking, setChecking] = useState(true);
+  const [message, setMessage] = useState('');
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        router.push('/'); 
+      } else {
+        setSession(null);
+        setChecking(false);
+      }
+    });
+  }, [router]);
+
+  if (checking) return <p>Loading...</p>;
+
+
+
 
   const handleRegister = async () => {
+    setMessage('');
     if (password !== confirmPassword) {
-      alert("Passwords don't match!");
+      setMessage("Passwords don't match!");
+      setIsError(true);
       return;
     }
 
-    setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
       password,
     });
-    setLoading(false);
+   
 
-    if (error) {
-      alert(error.message);
-    } else {
-      alert('Registration successful! Please check your email for confirmation.');
-      router.push('/login');
+     if (error) {
+      setMessage(error.message);
+      setIsError(true);
+      return
+    } else if (!error) {
+      setMessage(' Registration successful! Please check your email.');
+      setIsError(false);
+      setTimeout(() => router.push('/Login'), 2000);
     }
   };
 
@@ -74,6 +99,12 @@ export default function RegisterPage() {
           />
         </label>
 
+         {message && (
+          <div className={`mb-4 text-sm text-center font-medium ${isError ? 'text-red-600' : 'text-green-600'}`}>
+            {message}
+          </div>
+        )}
+
         <button
           onClick={handleRegister}
           disabled={loading}
@@ -81,6 +112,12 @@ export default function RegisterPage() {
         >
           {loading ? 'Registering...' : 'Register'}
         </button>
+         <p className="mt-4 text-center text-gray-700">
+        Already registered?{' '}
+      <a href="/Login" className="text-blue-600 hover:underline">
+        Login here
+      </a>
+    </p>
       </div>
     </div>
   );

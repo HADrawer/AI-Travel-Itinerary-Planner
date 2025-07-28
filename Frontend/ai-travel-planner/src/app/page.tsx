@@ -1,134 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../lib/supabase";
+import LogoutButton from "./components/LogoutButtons";
 
-export default function Home() {
-  const [destination, setDestination] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [preferences, setPreferences] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [itinerary, setItinerary] = useState("");
+interface Itinerary {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date: string;
+  updated_at: string;
+}
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    setLoading(true);
+export default function ItineraryList() {
+  const router = useRouter();
+  const [itineraries, setItineraries] = useState<Itinerary[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    const res = await fetch("http://localhost:3001/api/itinerary", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ destination, startDate, endDate, preferences }),
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) router.push("/Login");
+      else fetchItineraries(session.access_token);
     });
+  }, []);
 
+  async function fetchItineraries(token: string) {
+    const res = await fetch("http://localhost:3001/api/itineraries", {
+      headers: { token },
+    });
     const data = await res.json();
-    setItinerary(data.itinerary);
+    setItineraries(data);
     setLoading(false);
-  };
+  }
+
+  if (loading) return <div>Loading itineraries...</div>;
 
   return (
-    <main className="min-h-screen bg-gray-100 p-8">
-      <h1 className="text-4xl font-bold mb-6 text-center">
-        🌍 AI Travel Itinerary Planner
-      </h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto text-black">
-        {/* Input Panel */}
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white shadow p-6 rounded-lg space-y-4"
-        >
-          <label className="block">
-            <span className="text-gray-700 font-semibold">Destination</span>
-            <input
-              className="mt-1 w-full border rounded p-2"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              placeholder="e.g. Tokyo, Japan"
-              required
-            />
-          </label>
-
-          <div className="flex gap-4">
-            <label className="flex-1">
-              <span className="text-gray-700 font-semibold">Start Date</span>
-              <input
-                type="date"
-                className="mt-1 w-full border rounded p-2"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-              />
-            </label>
-
-            <label className="flex-1">
-              <span className="text-gray-700 font-semibold">End Date</span>
-              <input
-                type="date"
-                className="mt-1 w-full border rounded p-2"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                required
-              />
-            </label>
-          </div>
-
-          <label className="block">
-            <span className="text-gray-700 font-semibold">
-              Travel Preferences
-            </span>
-            <input
-              className="mt-1 w-full border rounded p-2"
-              value={preferences}
-              onChange={(e) => setPreferences(e.target.value)}
-              placeholder="e.g. Food, Culture, Adventure"
-              required
-            />
-          </label>
-
-          <button
-            type="submit"
-            className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
-          >
-            {loading ? "Generating..." : "Generate Itinerary"}
-          </button>
-        </form>
-
-        {/* Output Panel */}
-        <div className="bg-white shadow p-6 rounded-lg overflow-auto">
-          <h2 className="text-xl font-bold mb-4">🗓️ Itinerary</h2>
-          {itinerary ? (
-            itinerary
-              .split("*   ")
-              .filter((section) => section.trim() !== "")
-              .map((section, index) => {
-                const lines = section.split(/:\s*/);
-                const title = lines[0]?.replace(/\*\*/g, "").trim();
-                const bulletPoints =
-                  lines[1]?.split(/[,•\-]\s+/).filter((line) => line.trim() !== "");
-
-                return (
-                  <div
-                    key={index}
-                    className="mb-4 p-4 border rounded-lg shadow-sm bg-gray-50"
-                  >
-                    <h3 className="text-lg font-semibold text-blue-700 mb-2">
-                      {title}
-                    </h3>
-                    <ul className="list-disc list-inside text-gray-800 space-y-1">
-                      {bulletPoints?.map((point, i) => (
-                        <li key={i}>{point.trim()}</li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })
-          ) : (
-            <p className="text-gray-500">
-              Your personalized itinerary will appear here...
-            </p>
-          )}
-        </div>
-      </div>
+    <main className="p-8 max-w-4xl mx-auto">
+            <LogoutButton/>
+      <h1 className="text-3xl mb-6">Your Itineraries</h1>
+      {itineraries.length === 0 ? (
+        <>
+        <p>No itineraries yet.</p> <a href="/itineraries/new"> Create one!</a>
+        </>
+      ) : (
+        <ul>
+          {itineraries.map((item) => (
+            <li key={item.id} className="mb-4 p-4 border rounded shadow flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-semibold">{item.title}</h2>
+                <p>{item.start_date} - {item.end_date}</p>
+                <p className="text-sm text-gray-500">Last updated: {new Date(item.updated_at).toLocaleString()}</p>
+              </div>
+              <div>
+                <button
+                  onClick={() => router.push(`/itineraries/${item.id}`)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded"
+                >
+                  Open
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   );
 }
