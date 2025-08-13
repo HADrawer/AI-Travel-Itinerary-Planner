@@ -9,8 +9,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const router = useRouter();
-  const [loading, _setLoading] = useState(false);
- const [_session, setSession] = useState<Session | null>(null);
+ const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
@@ -55,6 +54,9 @@ export default function RegisterPage() {
       setTimeout(() => router.push('/Login'), 2000);
     }
   };
+  if (session){
+    
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-8 text-black">
@@ -107,10 +109,10 @@ export default function RegisterPage() {
 
         <button
           onClick={handleRegister}
-          disabled={loading}
+        
           className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 transition disabled:opacity-50"
         >
-          {loading ? 'Registering...' : 'Register'}
+          
         </button>
          <p className="mt-4 text-center text-gray-700">
         Already registered?{' '}

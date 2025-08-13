@@ -8,10 +8,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
- const [_session, setSession] = useState<Session | null>(null);
+ const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
-  // const [_message, setMessage] = useState('');
-  const [_isError, _setIsError] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
@@ -20,7 +18,9 @@ export default function LoginPage() {
         router.push('/'); 
       } else {
         setSession(null);
+        
         setChecking(false);
+        
       }
     });
   }, [router]);
@@ -37,6 +37,10 @@ export default function LoginPage() {
       setErrorMsg(error.message);
     }
   };
+
+  if(session){
+          
+        }
 
   return (
    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-8 text-black">
