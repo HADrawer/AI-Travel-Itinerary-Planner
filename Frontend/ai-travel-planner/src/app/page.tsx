@@ -47,7 +47,11 @@ export default function ItineraryList() {
         </>
       ) : (
         <ul>
+         <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"> <a href="/itineraries/new"> Create one!</a> </button>
+         <br/><br/>
+
           {itineraries.map((item) => (
+            
             <li key={item.id} className="mb-4 p-4 border rounded shadow flex justify-between items-center">
               <div>
                 <h2 className="text-xl font-semibold">{item.title}</h2>
@@ -58,11 +62,12 @@ export default function ItineraryList() {
                 <button
                   onClick={() => router.push(`/itineraries/${item.id}`)}
                   className="bg-blue-600 text-white px-4 py-2 rounded"
-                >
+                  >
                   Open
                 </button>
               </div>
             </li>
+                  
           ))}
         </ul>
       )}

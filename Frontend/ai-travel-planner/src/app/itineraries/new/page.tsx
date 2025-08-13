@@ -39,6 +39,8 @@ export default function CreateItinerary() {
 
   return (
     <main className="p-8 max-w-md mx-auto">
+      <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"> <a href="/"> Back</a> </button>
+         <br/><br/>
       <h1 className="text-2xl mb-4">Create New Itinerary</h1>
       <input
         type="text"
