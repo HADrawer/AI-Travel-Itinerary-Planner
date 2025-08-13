@@ -29,12 +29,10 @@ async function authenticate(req, res, next) {
 
 // ---------- Helpers ----------
 function buildChatPrompt({ currentItinerary, history, userMessage, meta }) {
-  // history: مصفوفة رسائل (user/assistant) نصّية فقط لاختصار السياق
   const historyText = history
     .map((c) => `${c.role === 'assistant' ? 'Assistant' : 'User'}: ${c.content}`)
     .join('\n');
 
-  // تعليمات قوية للنموذج بحيث يرجّع رد للمستخدم + النسخة النهائية للـ itinerary مفصولة بـ ||||
   const system = `
 You are an expert travel planner. You ALWAYS return TWO parts separated by the literal delimiter "||||".
 
@@ -134,7 +132,6 @@ async function callGemini(promptText) {
 
 // ---------- Routes ----------
 
-// Create itinerary
 app.post('/api/itineraries', authenticate, async (req, res) => {
   const { destination, startDate, endDate, preferences } = req.body;
   if (!destination || !startDate || !endDate) {
@@ -144,7 +141,6 @@ app.post('/api/itineraries', authenticate, async (req, res) => {
   const title = `Trip to ${destination}`;
 
   try {
-    // 1) أنشئ سجل الرحلة
     const { data: itinerary, error: insertError } = await supabase
       .from('itineraries')
       .insert({
@@ -153,20 +149,18 @@ app.post('/api/itineraries', authenticate, async (req, res) => {
         start_date: startDate,
         end_date: endDate,
         preferences,
-        itinerary_text: '' // عمود جديد لتخزين النص النهائي دائمًا
+        itinerary_text: '' 
       })
       .select()
       .single();
 
     if (insertError) throw insertError;
 
-    // 2) اطلب من Gemini إنشاء الخطة + رسالة قصيرة للمستخدم، مفصولة بـ ||||
     const promptText = buildInitialItineraryPrompt({ destination, startDate, endDate, preferences });
     const modelText = await callGemini(promptText);
 
     const [aiReply, itineraryPart] = modelText.split("||||").map(s => (s || "").trim());
 
-    // 3) خزّن الرسائل + حدّث نص الرحلة النهائي
     await supabase.from('chats').insert([
       { itinerary_id: itinerary.id, role: 'user', content: `Create itinerary for ${destination} (${startDate} → ${endDate}) with focus: ${preferences}` },
       { itinerary_id: itinerary.id, role: 'assistant', content: aiReply || "Itinerary created." },
@@ -184,7 +178,6 @@ app.post('/api/itineraries', authenticate, async (req, res) => {
   }
 });
 
-// List itineraries for user
 app.get('/api/itineraries', authenticate, async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -200,7 +193,6 @@ app.get('/api/itineraries', authenticate, async (req, res) => {
   }
 });
 
-// Chats history
 app.get('/api/itineraries/:id/chats', authenticate, async (req, res) => {
   const { id } = req.params;
   try {
@@ -227,7 +219,6 @@ app.get('/api/itineraries/:id/chats', authenticate, async (req, res) => {
   }
 });
 
-// Current itinerary state (left panel)
 app.get('/api/itineraries/:id/state', authenticate, async (req, res) => {
   const { id } = req.params;
   try {
@@ -246,14 +237,12 @@ app.get('/api/itineraries/:id/state', authenticate, async (req, res) => {
   }
 });
 
-// Chat with AI (updates itinerary if requested)
 app.post('/api/itineraries/:id/chat', authenticate, async (req, res) => {
   const { id } = req.params;
   const { message } = req.body;
   if (!message) return res.status(400).json({ error: 'Message is required' });
 
   try {
-    // 1) Fetch itinerary meta + current text
     const { data: itinerary } = await supabase
       .from('itineraries')
       .select('id,title,start_date,end_date,itinerary_text')
@@ -263,14 +252,12 @@ app.post('/api/itineraries/:id/chat', authenticate, async (req, res) => {
 
     if (!itinerary) return res.status(404).json({ error: 'Not found' });
 
-    // 2) Fetch conversation history
     const { data: chats } = await supabase
       .from('chats')
       .select('role,content')
       .eq('itinerary_id', id)
       .order('created_at');
 
-    // 3) Build prompt for Gemini
     const promptText = buildChatPrompt({
       currentItinerary: itinerary.itinerary_text || '',
       history: chats || [],
@@ -282,19 +269,16 @@ app.post('/api/itineraries/:id/chat', authenticate, async (req, res) => {
       },
     });
 
-    // 4) Call Gemini
     const modelText = await callGemini(promptText);
     const [aiReplyRaw, itineraryPartRaw] = modelText.split("||||");
     const aiReply = (aiReplyRaw || "").trim();
     const itineraryPart = (itineraryPartRaw || "").trim();
 
-    // 5) Store chat messages
     await supabase.from('chats').insert([
       { itinerary_id: id, role: 'user', content: message },
       { itinerary_id: id, role: 'assistant', content: aiReply || "Done." },
     ]);
 
-    // 6) Update itinerary_text with FINAL version (even if unchanged)
     await supabase
       .from('itineraries')
       .update({
@@ -303,7 +287,6 @@ app.post('/api/itineraries/:id/chat', authenticate, async (req, res) => {
       })
       .eq('id', id);
 
-    // 7) Return combined message
     res.json({ combinedMessage: `${aiReply || ""}||||${itineraryPart || itinerary.itinerary_text || ""}` });
   } catch (error) {
     console.error(error.response?.data || error.message || error);
@@ -311,7 +294,6 @@ app.post('/api/itineraries/:id/chat', authenticate, async (req, res) => {
   }
 });
 
-// Rename itinerary
 app.put('/api/itineraries/:id/rename', authenticate, async (req, res) => {
   const { id } = req.params;
   const { newTitle } = req.body;
@@ -331,22 +313,59 @@ app.put('/api/itineraries/:id/rename', authenticate, async (req, res) => {
   }
 });
 
-// Delete itinerary
 app.delete('/api/itineraries/:id', authenticate, async (req, res) => {
   const { id } = req.params;
+
+  console.log("Delete request for itinerary id:", id);
+  console.log("User id from token:", req.user?.id);
+
   try {
-    const { error } = await supabase
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: "Unauthorized: no user info" });
+    }
+
+    // تأكد إن الرحلة موجودة ومملوكة للمستخدم
+    const { data: itinerary, error: findError } = await supabase
+      .from('itineraries')
+      .select('id')
+      .eq('id', id)
+      .eq('user_id', req.user.id)
+      .single();
+
+    if (findError || !itinerary) {
+      console.log("No itinerary found or not authorized to delete");
+      return res.status(404).json({ error: "Not found or unauthorized" });
+    }
+
+    const { error: deleteChatsError } = await supabase
+      .from('chats')
+      .delete()
+      .eq('itinerary_id', id);
+
+    if (deleteChatsError) {
+      console.error("Error deleting related chats:", deleteChatsError);
+      throw deleteChatsError;
+    }
+
+    const { error: deleteItineraryError } = await supabase
       .from('itineraries')
       .delete()
       .eq('id', id)
       .eq('user_id', req.user.id);
 
-    if (error) throw error;
+    if (deleteItineraryError) {
+      console.error("Delete itinerary error:", deleteItineraryError);
+      throw deleteItineraryError;
+    }
+
     res.json({ message: 'Deleted' });
   } catch (error) {
+    console.error("Deletion failed:", error);
     res.status(500).json({ error: 'Failed to delete' });
   }
 });
+
+
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

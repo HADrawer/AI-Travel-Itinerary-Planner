@@ -34,42 +34,81 @@ export default function ItineraryList() {
     setLoading(false);
   }
 
+  async function handleDelete(id: string) {
+    if (!confirm("Are you sure you want to delete this itinerary?")) return;
+
+    const session = await supabase.auth.getSession();
+    const token = session.data.session?.access_token || "";
+
+    try {
+      const res = await fetch(`http://localhost:3001/api/itineraries/${id}`, {
+        method: "DELETE",
+        headers: { token },
+      });
+
+      if (!res.ok) throw new Error("Failed to delete itinerary");
+
+      setItineraries((prev) => prev.filter((item) => item.id !== id));
+    } catch (error) {
+      alert("An error occurred while deleting the itinerary. Please try again");
+      console.error(error);
+    }
+  }
+
   if (loading) return <div>Loading itineraries...</div>;
 
   return (
-
     <main className="p-8 max-w-4xl mx-auto">
-            <LogoutButton/>
+      <LogoutButton />
       <h1 className="text-3xl mb-6">Your Itineraries</h1>
       {itineraries.length === 0 ? (
         <>
-        <p>No itineraries yet.</p> <a href="/itineraries/new"> Create one!</a>
+          <h1>No itineraries yet.</h1> 
+          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+            <a href="/itineraries/new"> Create one!</a>
+          </button>
         </>
       ) : (
-        <ul>
-         <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"> <a href="/itineraries/new"> Create one!</a> </button>
-         <br/><br/>
+        <>
+          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+            <a href="/itineraries/new"> Create one!</a>
+          </button>
+          <br />
+          <br />
 
-          {itineraries.map((item) => (
-            
-            <li key={item.id} className="mb-4 p-4 border rounded shadow flex justify-between items-center">
-              <div>
-                <h2 className="text-xl font-semibold">{item.title}</h2>
-                <p>{item.start_date} - {item.end_date}</p>
-                <p className="text-sm text-gray-500">Last updated: {new Date(item.updated_at).toLocaleString()}</p>
-              </div>
-              <div>
-                <button
-                  onClick={() => router.push(`/itineraries/${item.id}`)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded"
+          <ul>
+            {itineraries.map((item) => (
+              <li
+                key={item.id}
+                className="mb-4 p-4 border rounded shadow flex justify-between items-center"
+              >
+                <div>
+                  <h2 className="text-xl font-semibold">{item.title}</h2>
+                  <p>
+                    {item.start_date} - {item.end_date}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Last updated: {new Date(item.updated_at).toLocaleString()}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => router.push(`/itineraries/${item.id}`)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded"
                   >
-                  Open
-                </button>
-              </div>
-            </li>
-                  
-          ))}
-        </ul>
+                    Open
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </main>
   );

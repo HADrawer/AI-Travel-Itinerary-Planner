@@ -12,7 +12,6 @@ interface ChatMessage {
 }
 
 function splitItinerary(text: string) {
-  // يدعم صيغ: "Day 1" أو "- Day 1" مع حساس لبداية السطر
   const parts = text.split(/(?=^\s*[-–]?\s*Day\s+\d+)/gmi);
   return parts.filter((p) => p.trim().length > 0);
 }
@@ -38,7 +37,6 @@ export default function ItineraryChat() {
         fetchChat(session.access_token);
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -92,7 +90,6 @@ export default function ItineraryChat() {
         { role: "assistant", content: aiReply },
       ]);
 
-      // حدّث الـ itinerary المعروض يسار
       if (itineraryPart) setItineraryText(itineraryPart);
 
       setInput("");
@@ -101,64 +98,71 @@ export default function ItineraryChat() {
   }
 
   return (
-    <main className="max-w-6xl mx-auto p-8 flex flex-col h-screen gap-8 text-black">
-      <h1 className="text-3xl font-bold mb-2 text-center">Itinerary Chat</h1>
-      <p className="text-center text-gray-600">
+    <main className="max-w-6xl mx-auto p-8 flex flex-col h-screen gap-8 text-black bg-gradient-to-r from-indigo-50 to-white">
+      {/* زر العودة */}
+      <button
+        onClick={() => router.push("/")}
+        className="self-start bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
+      >
+        ← Back
+      </button>
+
+      <h1 className="text-3xl font-extrabold mb-2 text-center text-indigo-700 drop-shadow-md">Itinerary Chat</h1>
+         
+      <p className="text-center text-indigo-500 italic font-semibold tracking-wide">
         {meta?.title ? `${meta.title} — ${meta.start_date} → ${meta.end_date}` : "Trip Itinerary"}
       </p>
 
-      <div className="flex flex-1 gap-6 overflow-hidden">
-        {/* اليسار: الـ Itinerary دائمًا محدث */}
-        <div className="flex-1 overflow-y-auto border rounded p-6 bg-white shadow-lg max-h-full">
-          <h2 className="text-xl font-semibold mb-4">Itinerary Details</h2>
+      <div className="flex flex-1 gap-8 overflow-hidden">
+        <div className="flex-1 overflow-y-auto border rounded-lg p-6 bg-white shadow-lg max-h-full">
+          <h2 className="text-2xl font-semibold mb-6 border-b pb-2 border-indigo-300 text-indigo-600">Itinerary Details</h2>
           {itineraryText ? (
             splitItinerary(itineraryText).map((dayText, idx) => (
               <div
                 key={idx}
-                className="mb-5 p-4 border border-gray-300 rounded-lg bg-gray-50"
-                style={{ whiteSpace: "pre-line" }}
+                className="mb-6 p-5 border border-indigo-200 rounded-xl bg-indigo-50 hover:bg-indigo-100 transition-colors duration-300 cursor-default"
+                style={{ whiteSpace: "pre-line", boxShadow: "0 3px 6px rgba(99, 102, 241, 0.15)" }}
               >
                 {dayText}
               </div>
             ))
           ) : (
-            <p className="text-gray-500">No itinerary details to show yet.</p>
+            <p className="text-gray-400 italic text-center mt-20">No itinerary details to show yet.</p>
           )}
         </div>
 
-        {/* اليمين: الشات */}
-        <div className="w-96 flex flex-col border rounded p-4 bg-gray-50 max-h-full">
-          <h2 className="text-xl font-semibold mb-4">Chat Bot</h2>
+        <div className="w-96 flex flex-col border rounded-lg p-4 bg-white shadow-md max-h-full">
+          <h2 className="text-2xl font-semibold mb-4 border-b border-gray-300 pb-2 text-gray-700">Chat Bot</h2>
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto space-y-4 mb-4"
+            className="flex-1 overflow-y-auto space-y-4 mb-4 px-2"
             style={{ scrollBehavior: "smooth" }}
           >
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`max-w-3/4 p-3 rounded-lg ${
-                  msg.role === "user"
-                    ? "bg-blue-600 text-white self-end"
-                    : "bg-gray-300 text-black self-start"
-                }`}
+                className={`max-w-[75%] p-3 rounded-2xl shadow-sm
+                  ${msg.role === "user"
+                    ? "bg-blue-600 text-white self-end rounded-br-none"
+                    : "bg-gray-200 text-gray-900 self-start rounded-bl-none"
+                  }`}
                 style={{
                   alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
                   whiteSpace: "pre-line",
                 }}
               >
-                <p>{msg.content}</p>
-                <span className="block text-xs mt-1 text-gray-600">
+                <p className="break-words">{msg.content}</p>
+                <span className="block text-xs mt-1 text-gray-500 select-none">
                   {msg.created_at ? new Date(msg.created_at).toLocaleString() : ""}
                 </span>
               </div>
             ))}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <input
               type="text"
-              className="flex-grow border rounded p-2"
+              className="flex-grow border border-indigo-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask or request changes to the itinerary..."
@@ -168,9 +172,9 @@ export default function ItineraryChat() {
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
+              className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors duration-200"
             >
-              {loading ? "..." : "Send"}
+              {loading ? "Sending..." : "Send"}
             </button>
           </div>
         </div>
