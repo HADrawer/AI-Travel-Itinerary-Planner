@@ -9,8 +9,8 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
- const [session, setSession] = useState<Session | null>(null);
+  const [loading, _setLoading] = useState(false);
+ const [_session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import Link from "next/link";
+
 
 interface Itinerary {
   id: string;
@@ -40,9 +42,9 @@ export default function ItineraryList() {
     <main className="p-8 max-w-4xl mx-auto">
       <h1 className="text-3xl mb-6">Your Itineraries</h1>
       {itineraries.length === 0 ? (
-        <>
-        <p>No itineraries yet.</p> <a href="/itineraries/new"> Create one!</a>
-        </>
+        <Link href={"/itineraries/new"}>
+        <p>No itineraries yet.</p>  Create one!
+        </Link>
       ) : (
         <ul>
           {itineraries.map((item) => (

@@ -8,10 +8,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
- const [session, setSession] = useState<Session | null>(null);
+ const [_session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
-  const [message, setMessage] = useState('');
-  const [isError, setIsError] = useState(false);
+  // const [_message, setMessage] = useState('');
+  const [_isError, _setIsError] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {

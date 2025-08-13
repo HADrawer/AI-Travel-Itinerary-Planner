@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import LogoutButton from "./components/LogoutButtons";
+import Link from "next/link";
 
 interface Itinerary {
   id: string;
@@ -65,15 +66,19 @@ export default function ItineraryList() {
       {itineraries.length === 0 ? (
         <>
           <h1>No itineraries yet.</h1> 
+          <Link href={"/itineraries/new"}>
           <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
-            <a href="/itineraries/new"> Create one!</a>
+             Create one!
           </button>
+          </Link>
         </>
       ) : (
         <>
+            <Link href={"/itineraries/new"}>
           <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
-            <a href="/itineraries/new"> Create one!</a>
+             Create one!
           </button>
+          </Link>
           <br />
           <br />
 
