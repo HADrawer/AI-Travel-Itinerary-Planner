@@ -18,7 +18,7 @@ export default function CreateItinerary() {
      supabase.auth.getSession().then(({ data: { session } }) => {
        if (!session) router.push("/Login");
      });
-   }, []);
+   }, [router]);
 
   async function create() {
     setLoading(true);
