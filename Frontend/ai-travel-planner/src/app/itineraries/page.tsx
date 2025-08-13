@@ -16,6 +16,7 @@ export default function ItineraryList() {
   const router = useRouter();
   const [itineraries, setItineraries] = useState<Itinerary[]>([]);
   const [loading, setLoading] = useState(true);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -25,7 +26,7 @@ export default function ItineraryList() {
   }, []);
 
   async function fetchItineraries(token: string) {
-    const res = await fetch("http://localhost:3001/api/itineraries", {
+    const res = await fetch(`${API_URL}/api/itineraries`, {
       headers: { token },
     });
     const data = await res.json();

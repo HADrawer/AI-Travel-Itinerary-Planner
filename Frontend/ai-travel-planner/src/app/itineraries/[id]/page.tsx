@@ -20,6 +20,7 @@ export default function ItineraryChat() {
   const router = useRouter();
   const params = useParams();
   const itineraryId = params.id as string;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -47,7 +48,7 @@ export default function ItineraryChat() {
   }, [messages]);
 
   async function fetchState(token: string) {
-    const res = await fetch(`http://localhost:3001/api/itineraries/${itineraryId}/state`, {
+    const res = await fetch(`${API_URL}/api/itineraries/${itineraryId}/state`, {
       headers: { token },
     });
     if (res.ok) {
@@ -58,7 +59,7 @@ export default function ItineraryChat() {
   }
 
   async function fetchChat(token: string) {
-    const res = await fetch(`http://localhost:3001/api/itineraries/${itineraryId}/chats`, {
+    const res = await fetch(`${API_URL}/api/itineraries/${itineraryId}/chats`, {
       headers: { token },
     });
     const data: ChatMessage[] = await res.json();
@@ -72,7 +73,7 @@ export default function ItineraryChat() {
     const session = await supabase.auth.getSession();
     const token = session.data.session?.access_token || "";
 
-    const res = await fetch(`http://localhost:3001/api/itineraries/${itineraryId}/chat`, {
+    const res = await fetch(`${API_URL}/api/itineraries/${itineraryId}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json", token },
       body: JSON.stringify({ message: input }),

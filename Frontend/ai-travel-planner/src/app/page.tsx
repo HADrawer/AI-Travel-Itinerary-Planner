@@ -14,6 +14,7 @@ interface Itinerary {
 }
 
 export default function ItineraryList() {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
   const router = useRouter();
   const [itineraries, setItineraries] = useState<Itinerary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +27,7 @@ export default function ItineraryList() {
   }, []);
 
   async function fetchItineraries(token: string) {
-    const res = await fetch("http://localhost:3001/api/itineraries", {
+    const res = await fetch(`${API_URL}/api/itineraries`, {
       headers: { token },
     });
     const data = await res.json();
@@ -41,7 +42,7 @@ export default function ItineraryList() {
     const token = session.data.session?.access_token || "";
 
     try {
-      const res = await fetch(`http://localhost:3001/api/itineraries/${id}`, {
+      const res = await fetch(`${API_URL}/api/itineraries/${id}`, {
         method: "DELETE",
         headers: { token },
       });

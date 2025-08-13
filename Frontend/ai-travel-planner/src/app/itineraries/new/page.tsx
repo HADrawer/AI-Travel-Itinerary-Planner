@@ -11,6 +11,7 @@ export default function CreateItinerary() {
   const [endDate, setEndDate] = useState("");
   const [preferences, setPreferences] = useState("");
   const [loading, setLoading] = useState(false);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
   useEffect(() => {
      supabase.auth.getSession().then(({ data: { session } }) => {
        if (!session) router.push("/Login");
@@ -22,7 +23,7 @@ export default function CreateItinerary() {
     const session = await supabase.auth.getSession();
     const token = session.data.session?.access_token;
 
-    const res = await fetch("http://localhost:3001/api/itineraries", {
+    const res = await fetch(`${API_URL}/api/itineraries`, {
       method: "POST",
       headers: { "Content-Type": "application/json", token: token || "" },
       body: JSON.stringify({ destination, startDate, endDate, preferences }),
